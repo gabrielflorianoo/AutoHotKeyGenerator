@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
 import "./SettingsSidebar.css";
 
-const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChange }) => {
+const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChange, ahkPath, onAhkPathChange }) => {
     const [hotkey, setHotkey] = useState(floatingHotkey || "Ctrl+Space");
+    const [path, setPath] = useState(ahkPath || "");
 
     useEffect(() => {
         setHotkey(floatingHotkey || "Ctrl+Space");
     }, [floatingHotkey]);
+
+    useEffect(() => {
+        setPath(ahkPath || "");
+    }, [ahkPath]);
 
     const handleHotkeyChange = (e) => {
         setHotkey(e.target.value);
@@ -14,6 +19,18 @@ const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChan
             localStorage.setItem("floatingHotkey", e.target.value);
         } catch (err) {}
         if (onFloatingHotkeyChange) onFloatingHotkeyChange(e.target.value);
+    };
+
+    const handlePathChange = (e) => {
+        setPath(e.target.value);
+    };
+
+    const savePath = () => {
+        try {
+            localStorage.setItem('ahkPath', path || '');
+        } catch (err) {}
+        if (onAhkPathChange) onAhkPathChange(path || '');
+        alert('Caminho salvo.');
     };
 
     return (
@@ -56,6 +73,21 @@ const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChan
                             <option value="Ctrl+Shift+K">Ctrl + Shift + K</option>
                             <option value="F2">F2</option>
                         </select>
+                    </div>
+
+                    <div className="setting-item">
+                        <label>Caminho do AutoHotkey (AutoHotkey.exe)</label>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input
+                                type="text"
+                                value={path}
+                                onChange={handlePathChange}
+                                placeholder="C:\\Program Files\\AutoHotkey\\AutoHotkey.exe"
+                                style={{ flex: 1, background: '#334155', color: 'white', border: '1px solid #475569', padding: '6px', borderRadius: '4px' }}
+                            />
+                            <button onClick={savePath} style={{ padding: '6px 10px', borderRadius: '4px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer' }}>Salvar</button>
+                        </div>
+                        <div style={{ marginTop: '6px', color: '#94a3b8', fontSize: '0.8rem' }}>Se vazio, o backend tentará localizar automaticamente.</div>
                     </div>
 
                     <div className="setting-info">

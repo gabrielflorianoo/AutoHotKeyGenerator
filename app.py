@@ -374,6 +374,17 @@ def run_macro():
     except Exception as e:
         return jsonify({"success": False, "error": f"Erro ao gravar arquivo: {str(e)}"}), 500
 
+    # Se o cliente forneceu um caminho específico, use-o
+    requested_path = data.get('ahk_path') or data.get('ahkPath')
+    if requested_path:
+        requested_path = os.path.expandvars(requested_path)
+        if os.path.exists(requested_path):
+            ahk_exe = requested_path
+        else:
+            ahk_exe = None
+            err_msg = f"Caminho fornecido não existe: {requested_path}"
+
+    # Tenta localizar AutoHotkey.exe em caminhos comuns (somente se não receber um caminho válido)
     # Tenta localizar AutoHotkey.exe em caminhos comuns
     candidates = []
     pf = os.environ.get('ProgramFiles', r'C:\Program Files')

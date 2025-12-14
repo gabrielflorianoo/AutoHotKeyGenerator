@@ -17,6 +17,13 @@ function App() {
             return "Ctrl+Space";
         }
     });
+    const [ahkPath, setAhkPath] = useState(() => {
+        try {
+            return localStorage.getItem('ahkPath') || '';
+        } catch (e) {
+            return '';
+        }
+    });
     // helper to test hotkey
     const isHotkeyPressed = (e, hotkeyString) => {
         if (!hotkeyString) return false;
@@ -407,8 +414,8 @@ function App() {
         }
 
         // Em seguida, solicitar ao backend que grave e execute
-        try {
-            const resp = await axios.post('/api/run-macro', { macros });
+            try {
+            const resp = await axios.post('/api/run-macro', { macros, ahk_path: ahkPath });
             if (resp.data) {
                 if (resp.data.success) {
                     alert('Macro executado. Se o AutoHotkey estiver instalado, o script foi aberto.');
@@ -488,6 +495,11 @@ function App() {
                 onFloatingHotkeyChange={(hk) => {
                     setFloatingHotkey(hk);
                     try { localStorage.setItem("floatingHotkey", hk); } catch (e) {}
+                }}
+                ahkPath={ahkPath}
+                onAhkPathChange={(p) => {
+                    setAhkPath(p || '');
+                    try { localStorage.setItem('ahkPath', p || ''); } catch (e) {}
                 }}
             />
 
