@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import CommandPanel from "./components/CommandPanel";
 import ConfigurationPanel from "./components/ConfigurationPanel";
@@ -8,6 +8,7 @@ import ScriptEditor from "./components/ScriptEditor";
 import SettingsSidebar from "./components/SettingsSidebar";
 import FloatingCommandSearch from "./components/FloatingCommandSearch";
 import "./App.css";
+import { useSelector } from "react-redux";
 
 function App() {
     const [floatingHotkey, setFloatingHotkey] = useState(() => {
@@ -24,6 +25,7 @@ function App() {
             return '';
         }
     });
+    const theme = useSelector((state) => state.theme.value);
     // helper to test hotkey
     const isHotkeyPressed = (e, hotkeyString) => {
         if (!hotkeyString) return false;
@@ -80,6 +82,17 @@ function App() {
 
         fetchCommands();
     }, []);
+
+    // Apply theme to body
+    useEffect(() => {
+        try {
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+            } else {
+                document.body.classList.remove('light-theme');
+            }
+        } catch (e) { }
+    }, [theme]);
 
     // Carregar do LocalStorage
     useEffect(() => {
@@ -321,7 +334,7 @@ function App() {
 
     const handleDeleteAction = (actionId) => {
         if (!activeMacroId) return;
-        
+
         const deleteFromTree = (actions) => {
             return actions.filter(action => {
                 if (action.id === actionId) return false;
@@ -338,7 +351,7 @@ function App() {
             }
             return macro;
         }));
-        
+
         if (selectedActionId === actionId) setSelectedActionId(null);
     };
 
@@ -419,7 +432,7 @@ function App() {
         }
 
         // Em seguida, solicitar ao backend que grave e execute
-            try {
+        try {
             const resp = await axios.post('/api/run-macro', { macros, ahk_path: ahkPath });
             if (resp.data) {
                 if (resp.data.success) {
@@ -474,8 +487,8 @@ function App() {
 
     return (
         <div className="app-container">
-            <button 
-                className="settings-btn" 
+            <button
+                className="settings-btn"
                 onClick={() => setIsSettingsOpen(true)}
                 title="Configurações"
                 style={{
@@ -493,18 +506,18 @@ function App() {
                 ⚙️
             </button>
 
-            <SettingsSidebar 
-                isOpen={isSettingsOpen} 
-                onClose={() => setIsSettingsOpen(false)} 
+            <SettingsSidebar
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
                 floatingHotkey={floatingHotkey}
                 onFloatingHotkeyChange={(hk) => {
                     setFloatingHotkey(hk);
-                    try { localStorage.setItem("floatingHotkey", hk); } catch (e) {}
+                    try { localStorage.setItem("floatingHotkey", hk); } catch (e) { }
                 }}
                 ahkPath={ahkPath}
                 onAhkPathChange={(p) => {
                     setAhkPath(p || '');
-                    try { localStorage.setItem('ahkPath', p || ''); } catch (e) {}
+                    try { localStorage.setItem('ahkPath', p || ''); } catch (e) { }
                 }}
             />
 
@@ -552,7 +565,7 @@ function App() {
                     onRunMacro={handleRunMacro}
                     // Hotkey agora é gerenciada no nível do Macro, não aqui
                     hotkey={""}
-                    onHotkeyChange={() => {}}
+                    onHotkeyChange={() => { }}
                 />
                 <CodeViewer generatedCode={generatedCode} />
             </div>

@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "./SettingsSidebar.css";
+import { useDispatch, useSelector } from "react-redux";
+import { setTheme } from "../store/themeSlice";
 
-const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChange, ahkPath, onAhkPathChange }) => {
+const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChange, ahkPath, onAhkPathChange, onThemeChange }) => {
+    const dispatch = useDispatch();
+    const theme = useSelector((s) => s.theme.value);
     const [hotkey, setHotkey] = useState(floatingHotkey || "Ctrl+Space");
     const [path, setPath] = useState(ahkPath || "");
 
@@ -21,9 +25,17 @@ const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChan
         if (onFloatingHotkeyChange) onFloatingHotkeyChange(e.target.value);
     };
 
+    const handleThemeChange = (e) => {
+        const t = e.target.value;
+        dispatch(setTheme(t));
+        if (onThemeChange) onThemeChange(t);
+    };
+
     const handlePathChange = (e) => {
-        setPath(e.target.value);
-        savePath();
+        const v = e.target.value;
+        setPath(v);
+        try { localStorage.setItem('ahkPath', v || ''); } catch (err) {}
+        if (onAhkPathChange) onAhkPathChange(v || '');
     };
 
     const savePath = () => {
@@ -45,7 +57,7 @@ const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChan
                 <div className="settings-content">
                     <div className="setting-item">
                         <label>Tema</label>
-                        <select defaultValue="dark">
+                        <select value={theme} onChange={handleThemeChange}>
                             <option value="dark">Escuro</option>
                             <option value="light">Claro</option>
                         </select>
@@ -89,10 +101,9 @@ const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChan
                         </div>
                     </div>
 
-                    <div
-                        className="setting-item"
-                        style={{ marginTop: '6px', color: '#94a3b8', fontSize: '0.8rem' }}
-                    >Se vazio, o backend tentará localizar automaticamente.</div>
+                    <div className="setting-hint">
+                        Se vazio, o backend tentará localizar automaticamente.
+                    </div>
 
                     <div className="setting-info">
                         <p>AutoHotKey Generator v1.0</p>

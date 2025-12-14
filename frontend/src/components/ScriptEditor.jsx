@@ -81,12 +81,9 @@ const ScriptAction = ({
                     {/* Placeholder para indicar onde novos itens entram neste container se ele estiver selecionado */}
                     {isSelected && (
                         <div
+                            className="add-here-placeholder"
                             style={{
                                 marginLeft: `${(depth + 1) * 20}px`,
-                                padding: "5px",
-                                color: "#666",
-                                fontSize: "0.8rem",
-                                border: "1px dashed #444",
                             }}
                         >
                             + Adicionar aqui

@@ -29,13 +29,6 @@ const ParameterInput = ({ param, value, onChange, onPick }) => {
                     onChange={handleChange}
                     placeholder={param.placeholder || ""}
                     rows={5}
-                    style={{
-                        width: "100%",
-                        background: "#111",
-                        color: "white",
-                        border: "1px solid #3a3a3a",
-                        padding: "0.5rem",
-                    }}
                 />
             );
         }
@@ -53,14 +46,13 @@ const ParameterInput = ({ param, value, onChange, onPick }) => {
 
         if (param.type === "checkbox") {
             return (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <div className="checkbox-wrapper">
                     <input
                         type="checkbox"
                         checked={value === undefined ? (param.default || false) : value}
                         onChange={(e) => onChange(param.name, e.target.checked)}
-                        style={{ width: "auto" }}
                     />
-                    <span style={{ fontSize: "0.9rem", color: "#ccc" }}>{param.label}</span>
+                    <span>{param.label}</span>
                 </div>
             );
         }
@@ -80,20 +72,13 @@ const ParameterInput = ({ param, value, onChange, onPick }) => {
     };
 
     return (
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <div style={{ flexGrow: 1 }}>{renderInput()}</div>
+        <div className="param-input-wrapper">
+            <div className="param-input-field">{renderInput()}</div>
             {param.hasPicker && (
                 <button
                     onClick={() => onPick(param.name)}
                     title="Capturar posição do mouse (aguarda 3s)"
-                    style={{
-                        padding: "0.6rem",
-                        cursor: "pointer",
-                        background: "#333",
-                        border: "1px solid #555",
-                        color: "white",
-                        borderRadius: "4px",
-                    }}
+                    className="picker-btn"
                 >
                     📍
                 </button>
@@ -156,19 +141,12 @@ const ConfigurationPanel = ({
         return (
             <div className="panel config-panel">
                 <h2>Configuração</h2>
-                <p
-                    style={{
-                        color: "#888",
-                        textAlign: "center",
-                        marginTop: "2rem",
-                    }}
-                >
+                <p className="config-empty-state">
                     Selecione uma ação no editor para configurar.
                 </p>
                 <button
                     className="generate-btn"
                     onClick={onGenerate}
-                    style={{ marginTop: "auto" }}
                 >
                     🚀 Gerar Código Completo
                 </button>
@@ -179,7 +157,7 @@ const ConfigurationPanel = ({
     return (
         <div className="panel config-panel">
             <h2>Configurar: {selectedCommand.label}</h2>
-            <p style={{ marginBottom: "1.5rem", color: "#aaa" }}>
+            <p className="config-description">
                 {selectedCommand.description}
             </p>
 
@@ -201,14 +179,7 @@ const ConfigurationPanel = ({
             </div>
 
             {picking && (
-                <div
-                    style={{
-                        textAlign: "center",
-                        color: "#e6a700",
-                        marginBottom: "1rem",
-                        fontWeight: "bold",
-                    }}
-                >
+                <div className="pick-message">
                     {pickMessage}
                 </div>
             )}
@@ -223,7 +194,6 @@ const ConfigurationPanel = ({
             <button
                 className="run-btn"
                 onClick={onRunMacro}
-                style={{ marginTop: '0.6rem', background: '#10b981', color: 'white', border: 'none', padding: '0.6rem 0.9rem', borderRadius: '6px', cursor: 'pointer' }}
             >
                 ▶️ Executar Macro (baixar + abrir)
             </button>

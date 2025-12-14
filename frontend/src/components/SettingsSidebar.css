@@ -11,6 +11,10 @@
     transition: opacity 0.3s ease;
 }
 
+body.light-theme .settings-overlay {
+    background: rgba(0, 0, 0, 0.3);
+}
+
 .settings-overlay.open {
     opacity: 1;
     visibility: visible;
@@ -22,12 +26,16 @@
     right: -300px;
     width: 300px;
     height: 100%;
-    background: #1e293b;
+    background: var(--panel-bg);
     box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
     z-index: 999;
     transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
+}
+
+body.light-theme .settings-sidebar {
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .settings-sidebar.open {
@@ -36,7 +44,7 @@
 
 .settings-header {
     padding: 20px;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -45,14 +53,20 @@
 .settings-header h2 {
     margin: 0;
     font-size: 1.2rem;
+    color: var(--text-color);
 }
 
 .close-btn {
     background: transparent;
     border: none;
-    color: #aaa;
+    color: var(--muted-color);
     font-size: 1.5rem;
     cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: var(--text-color);
 }
 
 .settings-content {
@@ -68,23 +82,23 @@
 }
 
 .setting-item label {
-    color: #e2e8f0;
+    color: var(--text-color);
     padding-right: 0.5rem;
 }
 
 .setting-item select {
-    background: #334155;
-    color: white;
-    border: 1px solid #475569;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     padding: 5px;
     border-radius: 4px;
 }
 
 .exePath {
     flex: 1;
-    background: #334155;
-    color: white;
-    border: 1px solid #475569;
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
     padding: 6px;
     border-radius: 4px;
 }
@@ -92,9 +106,15 @@
 .setting-info {
     margin-top: auto;
     padding-top: 20px;
-    border-top: 1px solid #334155;
+    border-top: 1px solid var(--border-color);
     text-align: center;
-    color: #64748b;
+    color: var(--muted-color);
+    font-size: 0.8rem;
+}
+
+.setting-hint {
+    margin-top: 6px;
+    color: var(--muted-color);
     font-size: 0.8rem;
 }
 
@@ -119,7 +139,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
+    background-color: var(--border-color);
     transition: .4s;
     border-radius: 20px;
 }
@@ -137,7 +157,7 @@
 }
 
 input:checked + .slider {
-    background-color: #3b82f6;
+    background-color: var(--accent-color);
 }
 
 input:checked + .slider:before {
