@@ -107,6 +107,7 @@ const ConfigurationPanel = ({
     parameters,
     onParamChange,
     onGenerate,
+    onRunMacro,
 }) => {
     const [picking, setPicking] = useState(false);
     const [pickMessage, setPickMessage] = useState("");
@@ -218,6 +219,13 @@ const ConfigurationPanel = ({
                 disabled={picking}
             >
                 {picking ? "Aguardando..." : "🚀 Gerar Código Completo"}
+            </button>
+            <button
+                className="run-btn"
+                onClick={onRunMacro}
+                style={{ marginTop: '0.6rem', background: '#10b981', color: 'white', border: 'none', padding: '0.6rem 0.9rem', borderRadius: '6px', cursor: 'pointer' }}
+            >
+                ▶️ Executar Macro (baixar + abrir)
             </button>
         </div>
     );

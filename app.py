@@ -1,7 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import ctypes
 import time
+import subprocess
+import tempfile
+import os
+import shutil
 
 app = Flask(__name__)
 CORS(app)
@@ -328,6 +332,93 @@ def generate_ahk_code():
         full_script += "\nReturn\n\n"
         
     return jsonify({"code": full_script})
+
+
+@app.route('/api/run-macro', methods=['POST'])
+def run_macro():
+    """
+    Recebe JSON com 'code' (string) ou 'macros' (lista). Gera .ahk, grava em arquivo temporário,
+    tenta localizar AutoHotkey.exe e executá-lo. Retorna JSON com status e caminho do arquivo.
+    """
+    data = request.json or {}
+    code = data.get('code')
+    macros = data.get('macros')
+
+    if not code:
+        # se recebeu macros, gera
+        if macros:
+            # Reuse existing generator
+            try:
+                # gera o script usando a função interna
+                full_script = "; Gerado por AHK Generator Pro\n\n"
+                for macro in macros:
+                    hotkey = macro.get('hotkey', '')
+                    actions = macro.get('actions', [])
+                    if not hotkey:
+                        continue
+                    full_script += f"{hotkey}::\n"
+                    full_script += generate_block(actions, 1)
+                    full_script += "\nReturn\n\n"
+                code = full_script
+            except Exception as e:
+                return jsonify({"success": False, "error": f"Erro ao gerar script: {str(e)}"}), 500
+        else:
+            return jsonify({"success": False, "error": "Nenhum código ou macros fornecidos."}), 400
+
+    # grava em arquivo temporário
+    try:
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.ahk', prefix='ahk_', dir=os.getcwd())
+        tmp_path = tmp.name
+        tmp.write(code.encode('utf-8'))
+        tmp.close()
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Erro ao gravar arquivo: {str(e)}"}), 500
+
+    # Tenta localizar AutoHotkey.exe em caminhos comuns
+    candidates = []
+    pf = os.environ.get('ProgramFiles', r'C:\Program Files')
+    pfx86 = os.environ.get('ProgramFiles(x86)', r'C:\Program Files (x86)')
+    candidates.append(os.path.join(pf, 'AutoHotkey', 'AutoHotkey.exe'))
+    candidates.append(os.path.join(pfx86, 'AutoHotkey', 'AutoHotkey.exe'))
+    # also check common portable path
+    candidates.append(os.path.join(os.getcwd(), 'AutoHotkey.exe'))
+
+    ahk_exe = None
+    for c in candidates:
+        if os.path.exists(c):
+            ahk_exe = c
+            break
+
+    if not ahk_exe:
+        # try in PATH
+        which = shutil.which('AutoHotkey.exe') or shutil.which('AutoHotkey')
+        if which:
+            ahk_exe = which
+
+    started = False
+    err_msg = None
+    pid = None
+    if ahk_exe:
+        try:
+            # Use Popen so it doesn't block; we detach
+            proc = subprocess.Popen([ahk_exe, tmp_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            started = True
+            pid = proc.pid
+        except Exception as e:
+            err_msg = str(e)
+    else:
+        err_msg = 'AutoHotkey.exe não encontrado. Instale o AutoHotkey ou informe o caminho.'
+
+    # Retorna resposta com sucesso parcial e caminho do arquivo para download
+    resp = {
+        "success": started,
+        "exe": ahk_exe,
+        "file": os.path.abspath(tmp_path),
+        "pid": pid,
+        "error": err_msg
+    }
+
+    return jsonify(resp)
 
 
 if __name__ == '__main__':

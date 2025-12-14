@@ -370,10 +370,55 @@ function App() {
 
             if (response.data && response.data.code) {
                 setGeneratedCode(response.data.code);
+                return response.data.code;
             }
+            return null;
         } catch (error) {
             console.error("Erro ao gerar código:", error);
             setGeneratedCode("; Erro ao gerar código. Verifique o console.");
+            return null;
+        }
+    };
+
+    const handleRunMacro = async () => {
+        if (!macros || macros.length === 0) {
+            alert('Nenhum macro para executar. Crie ou selecione um macro primeiro.');
+            return;
+        }
+
+        // Primeiro, acionar download local do .ahk com o código gerado (se houver)
+        try {
+            // Ensure we have latest generated code and get it directly
+            let code = generatedCode;
+            if (!code || code.includes('; Erro ao gerar')) {
+                code = await generateCode();
+            }
+            const blob = new Blob([code || ''], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'macro.ahk';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        } catch (e) {
+            console.warn('Erro ao iniciar download:', e);
+        }
+
+        // Em seguida, solicitar ao backend que grave e execute
+        try {
+            const resp = await axios.post('/api/run-macro', { macros });
+            if (resp.data) {
+                if (resp.data.success) {
+                    alert('Macro executado. Se o AutoHotkey estiver instalado, o script foi aberto.');
+                } else {
+                    alert('Arquivo gerado: ' + (resp.data.file || '') + '\nAviso: ' + (resp.data.error || 'Não foi possível executar automaticamente.'))
+                }
+            }
+        } catch (err) {
+            console.error('Erro ao chamar run-macro:', err);
+            alert('Erro ao solicitar execução do macro. Veja o console.');
         }
     };
 
@@ -487,6 +532,7 @@ function App() {
                     parameters={selectedActionParams}
                     onParamChange={handleParameterChange}
                     onGenerate={generateCode}
+                    onRunMacro={handleRunMacro}
                     // Hotkey agora é gerenciada no nível do Macro, não aqui
                     hotkey={""}
                     onHotkeyChange={() => {}}
