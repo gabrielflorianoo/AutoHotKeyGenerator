@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { SPECIAL_KEY_MAP } from "../contants";
 
 const MacroList = ({
     macros,
@@ -6,14 +7,53 @@ const MacroList = ({
     onSelectMacro,
     onAddMacro,
     onDeleteMacro,
-    onUpdateMacro,
 }) => {
     const [newMacroHotkey, setNewMacroHotkey] = useState("");
+
+    const buildAhkHotkey = (e) => {
+        // Modifiers
+        let prefix = '';
+        if (e.ctrlKey) prefix += '^';
+        if (e.altKey) prefix += '!';
+        if (e.shiftKey) prefix += '+';
+        if (e.metaKey) prefix += '#';
+
+        // Main key
+        let keyName = '';
+        // For single character keys, use uppercase letter/number
+        if (e.key && e.key.length === 1) {
+            keyName = e.key.toUpperCase();
+        } else if (e.key && SPECIAL_KEY_MAP[e.key]) {
+            keyName = SPECIAL_KEY_MAP[e.key];
+        } else if (e.code && e.code.startsWith('F')) {
+            // Function keys like F1..F12
+            keyName = e.code.toUpperCase();
+        } else if (e.key) {
+            // fallback to e.key cleaned
+            keyName = e.key.replace(/\s+/g, '');
+        }
+
+        return prefix + keyName;
+    };
+
+    const handleKeyDown = (e) => {
+        // Prevent the browser default for some combos
+        e.preventDefault();
+        const hk = buildAhkHotkey(e);
+        if (hk) setNewMacroHotkey(hk);
+        // If user pressed Enter, add macro
+        if (e.key === 'Enter') {
+            if (newMacroHotkey) {
+                onAddMacro(newMacroHotkey);
+                setNewMacroHotkey('');
+            }
+        }
+    };
 
     const handleAdd = () => {
         if (!newMacroHotkey) return;
         onAddMacro(newMacroHotkey);
-        setNewMacroHotkey("");
+        setNewMacroHotkey('');
     };
 
     return (
@@ -22,9 +62,11 @@ const MacroList = ({
             <div className="add-macro-form">
                 <input
                     type="text"
-                    placeholder="Nova Hotkey (ex: F1)"
+                    placeholder="Pressione a combinação de teclas..."
                     value={newMacroHotkey}
                     onChange={(e) => setNewMacroHotkey(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={(e) => e.target.select()}
                 />
                 <button onClick={handleAdd}>+</button>
             </div>
