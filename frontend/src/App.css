@@ -87,6 +87,11 @@ body {
     flex-direction: column;
     gap: 0.5rem;
     overflow-y: auto;
+    height: clamp(100px, 60%, 500px);
+}
+
+.macro-list::-webkit-scrollbar {
+    display: none;
 }
 
 .macro-item {

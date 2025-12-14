@@ -150,9 +150,14 @@ function App() {
     const handleAddMacro = (hotkey) => {
         const newMacro = {
             id: Date.now().toString(),
-            hotkey: hotkey,
+            hotkey: hotkey.toUpperCase(),
             actions: [],
         };
+        if (macros.find(m => m.hotkey === hotkey.toUpperCase())) {
+            alert("Já existe um macro com essa hotkey!");
+            return;
+        }
+
         setMacros([...macros, newMacro]);
         setActiveMacroId(newMacro.id);
         setSelectedActionId(null);
