@@ -1,0 +1,281 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import ctypes
+import time
+
+app = Flask(__name__)
+CORS(app)
+
+# --- Biblioteca de Comandos AHK ---
+
+COMMAND_LIBRARY = {
+    "Hotkeys & Gatilhos": [
+        {
+            "id": "Hotkey",
+            "label": "Definir Hotkey",
+            "template": "&key::\n    &code\nReturn",
+            "parameters": [
+                {"name": "key", "type": "text", "placeholder": "Tecla (ex: ^j, F1)"},
+                {"name": "code", "type": "textarea", "placeholder": "Código a executar"}
+            ],
+            "description": "Define uma tecla de atalho para executar um código."
+        },
+        {
+            "id": "Hotstring",
+            "label": "Definir Hotstring",
+            "template": "::&abbrev::&replacement",
+            "parameters": [
+                {"name": "abbrev", "type": "text", "placeholder": "Abreviação (ex: btw)"},
+                {"name": "replacement", "type": "text", "placeholder": "Texto expandido"}
+            ],
+            "description": "Substitui texto digitado por outro."
+        }
+    ],
+    "Mouse & Click": [
+        {
+            "id": "Click",
+            "label": "Clicar (Click)",
+            "template": "Click, &x, &y, &button",
+            "parameters": [
+                {"name": "x", "type": "number", "label": "X", "hasPicker": True},
+                {"name": "y", "type": "number", "label": "Y", "hasPicker": True},
+                {"name": "button", "type": "select", "options": ["Left", "Right", "Middle"], "default": "Left"}
+            ],
+            "description": "Clica em uma posição específica."
+        },
+        {
+            "id": "MouseMove",
+            "label": "Mover Mouse (MouseMove)",
+            "template": "MouseMove, &x, &y",
+            "parameters": [
+                {"name": "x", "type": "number", "label": "X", "hasPicker": True},
+                {"name": "y", "type": "number", "label": "Y", "hasPicker": True}
+            ],
+            "description": "Move o cursor para as coordenadas X e Y."
+        },
+        {
+            "id": "MouseGetPos",
+            "label": "Obter Posição (MouseGetPos)",
+            "template": "MouseGetPos, &OutputVarX, &OutputVarY",
+            "parameters": [
+                {"name": "OutputVarX", "type": "text", "default": "PosX"},
+                {"name": "OutputVarY", "type": "text", "default": "PosY"}
+            ],
+            "description": "Salva a posição atual do mouse em variáveis."
+        }
+    ],
+    "Teclado & Texto": [
+        {
+            "id": "Send",
+            "label": "Enviar Texto (Send)",
+            "template": "Send, &keys",
+            "parameters": [
+                {"name": "keys", "type": "text", "placeholder": "Texto ou teclas (ex: {Enter})"}
+            ],
+            "description": "Envia toques de tecla e cliques de mouse simulados."
+        },
+        {
+            "id": "SendInput",
+            "label": "Enviar Rápido (SendInput)",
+            "template": "SendInput, &keys",
+            "parameters": [
+                {"name": "keys", "type": "text", "placeholder": "Texto ou teclas"}
+            ],
+            "description": "Mais rápido e confiável que o Send tradicional."
+        }
+    ],
+    "Janelas (Window)": [
+        {
+            "id": "Run",
+            "label": "Executar Programa (Run)",
+            "template": "Run, &Target",
+            "parameters": [
+                {"name": "Target", "type": "text", "placeholder": "Caminho do arquivo, URL ou comando"}
+            ],
+            "description": "Executa um programa, documento ou URL."
+        },
+        {
+            "id": "WinActivate",
+            "label": "Ativar Janela (WinActivate)",
+            "template": "WinActivate, &WinTitle",
+            "parameters": [
+                {"name": "WinTitle", "type": "text", "placeholder": "Título da Janela"}
+            ],
+            "description": "Ativa a janela especificada."
+        },
+        {
+            "id": "WinWait",
+            "label": "Aguardar Janela (WinWait)",
+            "template": "WinWait, &WinTitle, , &Seconds",
+            "parameters": [
+                {"name": "WinTitle", "type": "text", "placeholder": "Título da Janela"},
+                {"name": "Seconds", "type": "number", "placeholder": "Tempo limite (segundos)"}
+            ],
+            "description": "Aguarda até que a janela exista."
+        },
+        {
+            "id": "WinClose",
+            "label": "Fechar Janela (WinClose)",
+            "template": "WinClose, &WinTitle",
+            "parameters": [
+                {"name": "WinTitle", "type": "text", "placeholder": "Título da Janela"}
+            ],
+            "description": "Fecha a janela especificada."
+        }
+    ],
+    "Controle de Fluxo": [
+        {
+            "id": "Sleep",
+            "label": "Pausar (Sleep)",
+            "template": "Sleep, &Delay",
+            "parameters": [
+                {"name": "Delay", "type": "number", "placeholder": "Milissegundos (1000 = 1s)"}
+            ],
+            "description": "Aguarda o tempo especificado antes de continuar."
+        },
+        {
+            "id": "MsgBox",
+            "label": "Caixa de Mensagem (MsgBox)",
+            "template": "MsgBox, &Text",
+            "parameters": [
+                {"name": "Text", "type": "text", "placeholder": "Mensagem a exibir"}
+            ],
+            "description": "Exibe uma caixa de mensagem simples."
+        },
+        {
+            "id": "Loop",
+            "label": "Loop",
+            "is_container": True,
+            "template": "Loop, &Count\n{\n&children\n}",
+            "parameters": [
+                {"name": "Count", "type": "number", "placeholder": "Repetições (vazio para infinito)"}
+            ],
+            "description": "Repete um bloco de código."
+        },
+        {
+            "id": "If",
+            "label": "Condicional (If)",
+            "is_container": True,
+            "template": "If (&Condition)\n{\n&children\n}",
+            "parameters": [
+                {"name": "Condition", "type": "text", "placeholder": "Ex: x > 100"}
+            ],
+            "description": "Executa o bloco se a condição for verdadeira."
+        },
+        {
+            "id": "While",
+            "label": "Enquanto (While)",
+            "is_container": True,
+            "template": "While (&Condition)\n{\n&children\n}",
+            "parameters": [
+                {"name": "Condition", "type": "text", "placeholder": "Ex: x < 500"}
+            ],
+            "description": "Repete o bloco enquanto a condição for verdadeira."
+        }
+    ]
+}
+
+@app.route('/api/commands', methods=['GET'])
+def get_commands():
+    return jsonify(COMMAND_LIBRARY)
+
+@app.route('/api/pick-position', methods=['GET'])
+def pick_position():
+    """
+    Aguarda um clique do botão esquerdo e retorna a posição do mouse.
+    """
+    # Constantes para ctypes
+    VK_LBUTTON = 0x01
+    
+    # Espera o botão ser solto (caso o usuário ainda esteja clicando no botão da interface)
+    while ctypes.windll.user32.GetAsyncKeyState(VK_LBUTTON) & 0x8000:
+        time.sleep(0.1)
+
+    # Espera o botão ser pressionado
+    while not (ctypes.windll.user32.GetAsyncKeyState(VK_LBUTTON) & 0x8000):
+        time.sleep(0.05)
+
+    class POINT(ctypes.Structure):
+        _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+    
+    pt = POINT()
+    ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+    return jsonify({"x": pt.x, "y": pt.y})
+
+def generate_block(actions, indent_level=1):
+    code_lines = []
+    indent = "    " * indent_level
+    
+    for action in actions:
+        cmd_id = action.get('command_id')
+        params = action.get('params', {})
+        children = action.get('children', [])
+        
+        # Busca o template
+        cmd_obj = None
+        for category in COMMAND_LIBRARY.values():
+            for cmd in category:
+                if cmd['id'] == cmd_id:
+                    cmd_obj = cmd
+                    break
+            if cmd_obj:
+                break
+        
+        if not cmd_obj:
+            code_lines.append(f"{indent}; Erro: Comando {cmd_id} desconhecido")
+            continue
+
+        template = cmd_obj['template']
+        generated_cmd = template
+
+        # Substituição de parâmetros
+        for param in cmd_obj.get('parameters', []):
+            p_name = param['name']
+            p_val = params.get(p_name, '')
+            placeholder = f"&{p_name}"
+            generated_cmd = generated_cmd.replace(placeholder, str(p_val))
+            
+        # Processamento de filhos (containers)
+        if cmd_obj.get('is_container'):
+            children_code = generate_block(children, indent_level + 1)
+            generated_cmd = generated_cmd.replace("&children", children_code)
+        
+        # Indentação correta para cada linha do comando gerado
+        # Se o template tem múltiplas linhas (como Loop), precisamos indentar as linhas subsequentes
+        cmd_lines = generated_cmd.split('\n')
+        indented_cmd = []
+        for i, line in enumerate(cmd_lines):
+            if i == 0:
+                indented_cmd.append(f"{indent}{line}")
+            else:
+                # Se a linha já não tiver indentação suficiente (ex: fechamento de chave), adiciona
+                # Mas cuidado para não duplicar indentação se o template já tiver
+                indented_cmd.append(f"{indent}{line}")
+                
+        code_lines.append("\n".join(indented_cmd))
+
+    return "\n".join(code_lines)
+
+@app.route('/api/generate', methods=['POST'])
+def generate_ahk_code():
+    data = request.json
+    macros = data.get('macros', [])
+    
+    full_script = "; Gerado por AHK Generator Pro\n\n"
+    
+    for macro in macros:
+        hotkey = macro.get('hotkey', '')
+        actions = macro.get('actions', [])
+        
+        if not hotkey:
+            continue
+            
+        full_script += f"{hotkey}::\n"
+        full_script += generate_block(actions, 1)
+        full_script += "\nReturn\n\n"
+        
+    return jsonify({"code": full_script})
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

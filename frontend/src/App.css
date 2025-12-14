@@ -1,0 +1,386 @@
+:root {
+    --bg-color: #0f172a;
+    --panel-bg: #1e293b;
+    --text-color: #e2e8f0;
+    --accent-color: #3b82f6;
+    --accent-hover: #2563eb;
+    --border-color: #334155;
+    --code-bg: #0f172a;
+    --input-bg: #334155;
+    --success-color: #10b981;
+}
+
+body {
+    margin: 0;
+    font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+}
+
+.app-container {
+    display: grid;
+    grid-template-columns: 300px 1fr 350px;
+    gap: 1.5rem;
+    height: 100vh;
+    padding: 1.5rem;
+    box-sizing: border-box;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow: hidden;
+}
+
+.main-content {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    overflow: hidden;
+}
+
+/* Macro List */
+.macro-panel {
+    flex: 0 0 auto;
+    max-height: 40%;
+}
+
+.add-macro-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.add-macro-form input {
+    flex: 1;
+    padding: 0.5rem;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    color: white;
+}
+
+.add-macro-form button {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 32px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.macro-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow-y: auto;
+}
+
+.macro-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #334155;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.macro-item.active {
+    border-color: var(--accent-color);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.macro-hotkey {
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.delete-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 4px;
+}
+
+.delete-btn:hover {
+    opacity: 1;
+}
+
+/* Command Panel */
+.command-panel {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.search-bar {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: white;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+}
+
+.command-list-container {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.command-list-container::-webkit-scrollbar {
+    display: none;
+}
+
+.code-viewer-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Script Editor */
+.script-editor-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.script-tree {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.script-action-wrapper {
+    margin-bottom: 0.25rem;
+}
+
+.script-action {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #334155;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.script-action:hover {
+    background: #475569;
+}
+
+.script-action.selected {
+    border-color: var(--accent-color);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.action-icon {
+    font-size: 1.1rem;
+}
+
+.action-label {
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.action-params {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-left: auto;
+    font-family: monospace;
+}
+
+.script-children {
+    border-left: 1px solid #475569;
+    margin-left: 10px; /* Metade do indent visual */
+}
+
+.empty-state {
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 2rem;
+    font-style: italic;
+}
+
+/* Command buttons (library) - reset and dark theme styles */
+.command-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.6rem 0.85rem;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    cursor: pointer;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    transition: background-color 0.15s ease, transform 0.08s ease, border-color 0.12s ease;
+    font-size: 0.95rem;
+    -webkit-appearance: none;
+    appearance: none;
+    line-height: 1.1;
+}
+
+.command-btn:hover {
+    background-color: rgba(59, 130, 246, 0.06);
+    color: var(--text-color);
+    transform: translateY(-1px);
+}
+
+.command-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.10);
+}
+
+.command-btn.active {
+    background: linear-gradient(90deg, var(--accent-color), #60a5fa);
+    color: white;
+    border-color: rgba(99,102,241,0.6);
+    box-shadow: 0 4px 10px rgba(59,130,246,0.12);
+    font-weight: 600;
+}
+
+/* Configuration Panel */
+.form-group {
+    margin-bottom: 1.25rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: white;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.generate-btn {
+    margin-top: auto;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+    letter-spacing: 0.025em;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.generate-btn:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.15);
+}
+
+.generate-btn:disabled {
+    background-color: #475569;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Code Viewer */
+.code-block {
+    background-color: var(--code-bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+    font-family: "Fira Code", "Consolas", monospace;
+    white-space: pre-wrap;
+    flex-grow: 1;
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    color: #e2e8f0;
+    line-height: 1.5;
+    font-size: 0.9rem;
+}
+
+.copy-btn {
+    margin-top: 1rem;
+    background-color: #334155;
+    color: white;
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.copy-btn:hover {
+    background-color: #475569;
+    border-color: #64748b;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.5rem;
+}
+
+.delete-action-btn {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    margin-left: auto;
+}
+
+.script-action:hover .delete-action-btn {
+    opacity: 1;
+}
+
+.delete-action-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
