@@ -137,9 +137,9 @@ COMMAND_LIBRARY = {
         {
             "id": "Sleep",
             "label": "Pausar (Sleep)",
-            "template": "Sleep, &Delay",
+            "template": "Sleep, &Delay * 1000",
             "parameters": [
-                {"name": "Delay", "type": "number", "placeholder": "Milissegundos (1000 = 1s)"}
+                {"name": "Delay (segundos)", "type": "number", "placeholder": "Segundos"}
             ],
             "description": "Aguarda o tempo especificado antes de continuar."
         },
