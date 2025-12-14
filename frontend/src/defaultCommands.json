@@ -1,0 +1,40 @@
+{
+  "Mouse & Click": [
+    {
+      "id": "Click",
+      "label": "Clicar (Click)",
+      "template": "Click, &x, &y, &button",
+      "parameters": [
+        { "name": "x", "type": "number", "label": "X", "hasPicker": true },
+        { "name": "y", "type": "number", "label": "Y", "hasPicker": true },
+        { "name": "button", "type": "select", "options": ["Left", "Right", "Middle"], "default": "Left" },
+        { "name": "relative", "type": "checkbox", "label": "Relativo a tela", "default": true },
+        { "name": "screenWidth", "type": "hidden" },
+        { "name": "screenHeight", "type": "hidden" }
+      ],
+      "description": "Clica em uma posição específica."
+    },
+    {
+      "id": "MouseMove",
+      "label": "Mover Mouse (MouseMove)",
+      "template": "MouseMove, &x, &y",
+      "parameters": [
+        { "name": "x", "type": "number", "label": "X", "hasPicker": true },
+        { "name": "y", "type": "number", "label": "Y", "hasPicker": true },
+        { "name": "relative", "type": "checkbox", "label": "Relativo a tela", "default": true },
+        { "name": "screenWidth", "type": "hidden" },
+        { "name": "screenHeight", "type": "hidden" }
+      ],
+      "description": "Move o cursor para as coordenadas X e Y."
+    }
+  ],
+  "Teclado & Texto": [
+    {
+      "id": "Send",
+      "label": "Enviar Texto (Send)",
+      "template": "Send, &keys",
+      "parameters": [ { "name": "keys", "type": "text", "placeholder": "Texto ou teclas (ex: {Enter})" } ],
+      "description": "Envia toques de tecla e cliques de mouse simulados."
+    }
+  ]
+}

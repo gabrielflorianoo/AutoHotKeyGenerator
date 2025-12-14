@@ -51,6 +51,24 @@ const ParameterInput = ({ param, value, onChange, onPick }) => {
             );
         }
 
+        if (param.type === "checkbox") {
+            return (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <input
+                        type="checkbox"
+                        checked={value === undefined ? (param.default || false) : value}
+                        onChange={(e) => onChange(param.name, e.target.checked)}
+                        style={{ width: "auto" }}
+                    />
+                    <span style={{ fontSize: "0.9rem", color: "#ccc" }}>{param.label}</span>
+                </div>
+            );
+        }
+
+        if (param.type === "hidden") {
+            return null;
+        }
+
         return (
             <input
                 type="text"
@@ -99,8 +117,8 @@ const ConfigurationPanel = ({
 
         try {
             const response = await axios.get("/api/pick-position");
-            const { x, y } = response.data;
-            console.log(x, y);
+            const { x, y, screenWidth, screenHeight } = response.data;
+            console.log(x, y, screenWidth, screenHeight);
 
             // Atualiza o campo clicado
             onParamChange(paramName, paramName === "y" ? y : x);
@@ -113,6 +131,14 @@ const ConfigurationPanel = ({
             ) {
                 onParamChange("x", x);
                 onParamChange("y", y);
+            }
+
+            // Atualiza dimensões da tela se o comando suportar
+            if (selectedCommand.parameters.find((p) => p.name === "screenWidth")) {
+                onParamChange("screenWidth", screenWidth);
+            }
+            if (selectedCommand.parameters.find((p) => p.name === "screenHeight")) {
+                onParamChange("screenHeight", screenHeight);
             }
 
             setPickMessage("Capturado!");
@@ -157,17 +183,20 @@ const ConfigurationPanel = ({
             </p>
 
             <div className="parameters-form">
-                {selectedCommand.parameters.map((param) => (
-                    <div key={param.name} className="form-group">
-                        <label>{param.label || param.name}:</label>
-                        <ParameterInput
-                            param={param}
-                            value={parameters[param.name]}
-                            onChange={onParamChange}
-                            onPick={handlePickPosition}
-                        />
-                    </div>
-                ))}
+                {selectedCommand.parameters.map((param) => {
+                    if (param.type === "hidden") return null;
+                    return (
+                        <div key={param.name} className="form-group">
+                            {param.type !== "checkbox" && <label>{param.label || param.name}:</label>}
+                            <ParameterInput
+                                param={param}
+                                value={parameters[param.name]}
+                                onChange={onParamChange}
+                                onPick={handlePickPosition}
+                            />
+                        </div>
+                    );
+                })}
             </div>
 
             {picking && (

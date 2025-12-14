@@ -39,7 +39,10 @@ COMMAND_LIBRARY = {
             "parameters": [
                 {"name": "x", "type": "number", "label": "X", "hasPicker": True},
                 {"name": "y", "type": "number", "label": "Y", "hasPicker": True},
-                {"name": "button", "type": "select", "options": ["Left", "Right", "Middle"], "default": "Left"}
+                {"name": "button", "type": "select", "options": ["Left", "Right", "Middle"], "default": "Left"},
+                {"name": "relative", "type": "checkbox", "label": "Relativo a tela", "default": True},
+                {"name": "screenWidth", "type": "hidden"},
+                {"name": "screenHeight", "type": "hidden"}
             ],
             "description": "Clica em uma posição específica."
         },
@@ -49,7 +52,10 @@ COMMAND_LIBRARY = {
             "template": "MouseMove, &x, &y",
             "parameters": [
                 {"name": "x", "type": "number", "label": "X", "hasPicker": True},
-                {"name": "y", "type": "number", "label": "Y", "hasPicker": True}
+                {"name": "y", "type": "number", "label": "Y", "hasPicker": True},
+                {"name": "relative", "type": "checkbox", "label": "Relativo a tela", "default": True},
+                {"name": "screenWidth", "type": "hidden"},
+                {"name": "screenHeight", "type": "hidden"}
             ],
             "description": "Move o cursor para as coordenadas X e Y."
         },
@@ -200,7 +206,13 @@ def pick_position():
     
     pt = POINT()
     ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
-    return jsonify({"x": pt.x, "y": pt.y})
+    
+    # Obter resolução da tela
+    ctypes.windll.user32.SetProcessDPIAware()
+    width = ctypes.windll.user32.GetSystemMetrics(0)
+    height = ctypes.windll.user32.GetSystemMetrics(1)
+
+    return jsonify({"x": pt.x, "y": pt.y, "screenWidth": width, "screenHeight": height})
 
 def generate_block(actions, indent_level=1):
     code_lines = []
@@ -219,6 +231,47 @@ def generate_block(actions, indent_level=1):
                     cmd_obj = cmd
                     break
             if cmd_obj:
+                break
+                
+        # Lógica especial para coordenadas relativas
+        if cmd_id in ["Click", "MouseMove"] and params.get("relative") is True:
+            try:
+                x = float(params.get("x", 0))
+                y = float(params.get("y", 0))
+                sw = float(params.get("screenWidth", 1920)) # Default fallback
+                sh = float(params.get("screenHeight", 1080)) # Default fallback
+                
+                # Se sw/sh forem 0 ou inválidos, fallback
+                if sw == 0: sw = 1920
+                if sh == 0: sh = 1080
+
+                x_perc = x / sw
+                y_perc = y / sh
+                
+                # Gera código para calcular posição relativa
+                code_lines.append(f"{indent}CoordMode, Mouse, Screen")
+                code_lines.append(f"{indent}rx := (A_ScreenWidth * {x_perc:.4f})")
+                code_lines.append(f"{indent}ry := (A_ScreenHeight * {y_perc:.4f})")
+                
+                # Substitui no template
+                template = cmd_obj['template']
+                generated_cmd = template.replace("&x", "%rx%").replace("&y", "%ry%")
+                
+                # Substitui outros parâmetros (ex: button)
+                for param in cmd_obj.get('parameters', []):
+                    if param['name'] in ['x', 'y', 'relative', 'screenWidth', 'screenHeight']:
+                        continue
+                    p_name = param['name']
+                    p_val = params.get(p_name, '')
+                    placeholder = f"&{p_name}"
+                    generated_cmd = generated_cmd.replace(placeholder, str(p_val))
+                
+                code_lines.append(f"{indent}{generated_cmd}")
+                continue # Pula o processamento padrão
+            except Exception as e:
+                code_lines.append(f"{indent}; Erro ao calcular coordenadas relativas: {str(e)}")
+                # Fallback para processamento padrão
+
                 break
         
         if not cmd_obj:

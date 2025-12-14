@@ -5,9 +5,41 @@ import ConfigurationPanel from "./components/ConfigurationPanel";
 import CodeViewer from "./components/CodeViewer";
 import MacroList from "./components/MacroList";
 import ScriptEditor from "./components/ScriptEditor";
+import SettingsSidebar from "./components/SettingsSidebar";
+import FloatingCommandSearch from "./components/FloatingCommandSearch";
 import "./App.css";
 
 function App() {
+    const [floatingHotkey, setFloatingHotkey] = useState(() => {
+        try {
+            return localStorage.getItem("floatingHotkey") || "Ctrl+Space";
+        } catch (e) {
+            return "Ctrl+Space";
+        }
+    });
+    // helper to test hotkey
+    const isHotkeyPressed = (e, hotkeyString) => {
+        if (!hotkeyString) return false;
+        const parts = hotkeyString.split("+").map(p => p.trim().toLowerCase());
+        const keyPart = parts[parts.length - 1];
+        const ctrl = parts.includes("ctrl") || parts.includes("control");
+        const alt = parts.includes("alt");
+        const shift = parts.includes("shift");
+
+        const keyMatches = (k) => {
+            if (!k) return false;
+            const code = e.code ? e.code.toLowerCase() : "";
+            const key = e.key ? e.key.toLowerCase() : "";
+            if (k === "space") return code === "space" || key === " ";
+            if (k.length === 1) return key === k;
+            return code === k || key === k;
+        };
+
+        if (ctrl && !e.ctrlKey) return false;
+        if (alt && !e.altKey) return false;
+        if (shift && !e.shiftKey) return false;
+        return keyMatches(keyPart);
+    };
     const [commandLibrary, setCommandLibrary] = useState({});
     const [macros, setMacros] = useState([]);
     const [globalVars, setGlobalVars] = useState([]);
@@ -15,6 +47,9 @@ function App() {
     const [selectedActionId, setSelectedActionId] = useState(null);
     const [generatedCode, setGeneratedCode] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isFloatingSearchOpen, setIsFloatingSearchOpen] = useState(false);
+    const [floatingSearchPos, setFloatingSearchPos] = useState({ x: 0, y: 0 });
 
     // Carregar biblioteca de comandos ao iniciar
     useEffect(() => {
@@ -24,6 +59,13 @@ function App() {
                 setCommandLibrary(response.data);
             } catch (error) {
                 console.error("Erro ao carregar comandos:", error);
+                // fallback para comandos padrões embutidos
+                try {
+                    const defaults = await import("./defaultCommands.json");
+                    setCommandLibrary(defaults.default || defaults);
+                } catch (e) {
+                    console.warn("Não foi possível carregar comandos padrão:", e);
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -68,6 +110,34 @@ function App() {
         }, 500); // Debounce de 500ms
         return () => clearTimeout(timer);
     }, [macros, globalVars]);
+
+    // Atalho para Floating Search (configurável) e Rastreamento do Mouse
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            try {
+                if (isHotkeyPressed(e, floatingHotkey)) {
+                    e.preventDefault();
+                    setIsFloatingSearchOpen(prev => !prev);
+                }
+            } catch (err) {
+                // ignore
+            }
+        };
+
+        const handleMouseMove = (e) => {
+            if (!isFloatingSearchOpen) {
+                setFloatingSearchPos({ x: e.clientX, y: e.clientY });
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("mousemove", handleMouseMove);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("mousemove", handleMouseMove);
+        };
+    }, [isFloatingSearchOpen, floatingHotkey]);
 
     // --- Gerenciamento de Macros ---
     const handleAddMacro = (hotkey) => {
@@ -347,6 +417,42 @@ function App() {
 
     return (
         <div className="app-container">
+            <button 
+                className="settings-btn" 
+                onClick={() => setIsSettingsOpen(true)}
+                title="Configurações"
+                style={{
+                    position: "fixed",
+                    top: "10px",
+                    right: "10px",
+                    zIndex: 100,
+                    background: "transparent",
+                    border: "none",
+                    color: "#64748b",
+                    fontSize: "1.5rem",
+                    cursor: "pointer"
+                }}
+            >
+                ⚙️
+            </button>
+
+            <SettingsSidebar 
+                isOpen={isSettingsOpen} 
+                onClose={() => setIsSettingsOpen(false)} 
+                floatingHotkey={floatingHotkey}
+                onFloatingHotkeyChange={(hk) => {
+                    setFloatingHotkey(hk);
+                    try { localStorage.setItem("floatingHotkey", hk); } catch (e) {}
+                }}
+            />
+
+            <FloatingCommandSearch
+                isOpen={isFloatingSearchOpen}
+                onClose={() => setIsFloatingSearchOpen(false)}
+                position={floatingSearchPos}
+                commandLibrary={commandLibrary}
+                onAddCommand={handleAddCommand}
+            />
             <div className="sidebar">
                 <MacroList
                     macros={macros}
