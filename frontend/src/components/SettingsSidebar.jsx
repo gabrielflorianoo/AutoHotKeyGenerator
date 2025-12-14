@@ -23,6 +23,7 @@ const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChan
 
     const handlePathChange = (e) => {
         setPath(e.target.value);
+        savePath();
     };
 
     const savePath = () => {
@@ -76,19 +77,22 @@ const SettingsSidebar = ({ isOpen, onClose, floatingHotkey, onFloatingHotkeyChan
                     </div>
 
                     <div className="setting-item">
-                        <label>Caminho do AutoHotkey (AutoHotkey.exe)</label>
+                        <label>Caminho AutoHotkey</label>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                             <input
                                 type="text"
+                                className="exePath"
                                 value={path}
                                 onChange={handlePathChange}
                                 placeholder="C:\\Program Files\\AutoHotkey\\AutoHotkey.exe"
-                                style={{ flex: 1, background: '#334155', color: 'white', border: '1px solid #475569', padding: '6px', borderRadius: '4px' }}
                             />
-                            <button onClick={savePath} style={{ padding: '6px 10px', borderRadius: '4px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer' }}>Salvar</button>
                         </div>
-                        <div style={{ marginTop: '6px', color: '#94a3b8', fontSize: '0.8rem' }}>Se vazio, o backend tentará localizar automaticamente.</div>
                     </div>
+
+                    <div
+                        className="setting-item"
+                        style={{ marginTop: '6px', color: '#94a3b8', fontSize: '0.8rem' }}
+                    >Se vazio, o backend tentará localizar automaticamente.</div>
 
                     <div className="setting-info">
                         <p>AutoHotKey Generator v1.0</p>
